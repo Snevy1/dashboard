@@ -49,9 +49,16 @@ const storage = new GridFsStorage({
   file: (req, file) => {
     return new Promise((resolve, reject) => {
       const filename = path.basename(file.originalname);
+      const bucketName = file.mimetype.startsWith('image/') ? 'images' : 'uploads';
+      const metadata = {
+        folder: file.originalname.includes('parasitology') ? 'parasitology' : 'others'
+      };
+      console.log('Storing in:', bucketName);
       const fileInfo = {
         filename: filename,
-        bucketName: 'uploads',
+       bucketName: bucketName,
+       metadata: metadata,
+        /* bucketName: 'uploads', */
       };
       resolve(fileInfo);
     });
@@ -77,16 +84,67 @@ app.get('/files', async (req, res) => {
       });
     }
     res.json(files);
+    
   } catch (err) {
     console.error(err);
     res.status(500).json({ err: 'Internal server error' });
   }
 });
 
+
+// Files from a particular folder
+
+
+app.get('/files/:folder', async (req, res) => {
+  const folderName = req.params.folder;
+
+  try {
+    const files = await db.collection('uploads.files').find({
+      'metadata.folder': folderName
+    }).toArray();
+
+    if (!files || files.length === 0) {
+      return res.status(404).json({ err: 'No files found in this folder' });
+    }
+
+    res.json(files);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: 'Internal server error' });
+  }
+});
+
+
+
+
+
+
 // @route GET /image/:filename
 // @desc Display image
-app.get('/image/:filename', (req, res) => {
-  db.collection('uploads.files').findOne({ filename: req.params.filename }, (err, file) => {
+
+// testing
+
+app.get('/images', async (req, res) => {
+  try {
+    const files = await db.collection('images.files').find({}).toArray();
+    if (!files || files.length === 0) {
+      return res.status(404).json({
+        err: 'No files exist',
+      });
+    }
+    res.json(files);
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: 'Internal server error' });
+  }
+});
+
+
+
+
+/* app.get('/image/:filename', (req, res) => {
+  db.collection('images.files').findOne({ filename: req.params.filename }, (err, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({
         err: 'No file exists',
@@ -104,7 +162,7 @@ app.get('/image/:filename', (req, res) => {
       });
     }
   });
-});
+}); */
 
 // @route DELETE /files/:id
 // @desc Delete file
