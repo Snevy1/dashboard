@@ -205,14 +205,14 @@ const Sidebardash = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            <Item
+{/*             <Item
               title="File Viwer"
               to="/fileview"
               icon={<HelpOutlineOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-            
+             */}
           </Box>
         </Menu>
       </Sidebar>

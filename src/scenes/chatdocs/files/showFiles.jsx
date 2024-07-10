@@ -3,13 +3,27 @@ import svgpdf from "../../../assets/pdf-201f3933.svg";
 import svgjpg from "../../../assets/file-image-jpg-svgrepo-com.svg"
 import svgpng from "../../../assets/file-image-svgrepo-com.svg"
 //import handledocumentClick from "./handledocClick";
+import { useNavigate } from 'react-router-dom';
+import {FileViewer} from "../fileViewer";
+
+const FetchFile = (heading)=>{
+    
+  let FileName = heading;
+  console.log(FileName);
+  return FileName;
+}
+
+
 
 
 const ShowFiles = () => {
+  const navigate = useNavigate();
     const [files, setFiles] = useState([]);
     const [documentClicked, setClicked ] = useState(false)
     const [heading, setheading] = useState('This is the current heading')
     const [fileuploadDate, setFileuploadDate] = useState('24-5-6');
+    
+    //const fileName = "http://localhost:8000/files/Invoice_EUINKE24_27831.pdf";
 
      useEffect(() => {
       fetch('http://localhost:8000/files')
@@ -29,6 +43,7 @@ const ShowFiles = () => {
       };
 
     const handledocumentClick=(file,e)=>{
+      
     
       setClicked(true);
       
@@ -47,8 +62,21 @@ const ShowFiles = () => {
 
          setheading(nameElement.innerHTML);
          setFileuploadDate(formattedDate);
+         let heading = file.filename
+         console.log(heading);
+         FetchFile(heading)
 
     }
+
+   const handleViewFile = ()=>{
+    
+     navigate("/fileview", { state: { heading } })
+    
+    
+    
+   }
+
+    
     
   
     return (
@@ -87,6 +115,8 @@ const ShowFiles = () => {
             <div >
             <h2 id="document__name">{heading}</h2>
             <h3>{fileuploadDate}</h3>
+
+            <h2 onClick={handleViewFile}>ViewFile</h2>
             
 
 
@@ -130,7 +160,7 @@ const ShowFiles = () => {
     
   }
   
-  export default App; 
+  export {App, ShowFiles,FetchFile} ; 
 
 
    // console.log("Hello! here are your files")

@@ -9,9 +9,9 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
 import Fileupload from "./Fileupload";
 //import ShowFiles from "./files/showFiles";
-import App from "./files/showFiles";
+
+import { App } from "./files/showFiles";
 import ShowImagesContainer from "./files/showImages";
-import Displaydocs from "./files/Displaydocums";
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
     clipPath: 'inset(50%)',

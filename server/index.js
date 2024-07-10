@@ -92,7 +92,7 @@ app.get('/files', async (req, res) => {
 });
 
 
-app.get('/files/:filename', async (req, res) => {
+ /* app.get('/files/:filename', async (req, res) => {
   try {
     console.log(req.params.filename)
     const fileName = req.params.filename
@@ -113,13 +113,13 @@ app.get('/files/:filename', async (req, res) => {
     console.error(err);
     res.status(500).json({ err: 'Internal server error' });
   }
-});
-
+}); 
+ */
 
 // Files from a particular folder
 
 
-/* app.get('/files/:folder', async (req, res) => {
+ app.get('/files/:folder', async (req, res) => {
   const folderName = req.params.folder;
 
   try {
@@ -136,7 +136,42 @@ app.get('/files/:filename', async (req, res) => {
     console.error(err);
     res.status(500).json({ err: 'Internal server error' });
   }
-}); */
+}); 
+
+// =====Get specific file from the folder
+
+
+app.get('/files/:folder/:filename', async (req, res) => {
+  //const fileName = req.params.filename;
+  //res.json("Hello there")
+  //console.log(fileName);
+
+  try {
+    const folderName = req.params.folder
+    const fileName = req.params.filename
+    /* const files = await db.collection('uploads.files').find({filename:req.params.filename }).toArray();
+    //filename: req.params.filename
+     if (!files || files.length === 0) {
+      return res.status(404).json({ err: 'No file exists' });
+    } 
+
+    // Log the file details to the console
+    console.log('File details:', files[0]);
+
+    const readstream = gfs.openDownloadStreamByName(req.params.filename);
+    readstream.pipe(res); */
+
+    const files = await db.collection('uploads.files').find({
+      'metadata.folder': folderName,
+      'filename': fileName
+    }).toArray();
+    res.json(files);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: 'Internal server error' });
+  }
+  
+}); 
 
 
 

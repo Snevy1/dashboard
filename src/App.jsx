@@ -18,13 +18,16 @@ import { Routes, Route } from "react-router-dom";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ColorModeContext, useMode } from "./theme";
 import Document from './scenes/document';
-import FileViewer from './scenes/chatdocs/fileViewer';
-import { Worker } from '@react-pdf-viewer/core';
+import {FileViewer} from './scenes/chatdocs/fileViewer';
+//import { Worker } from '@react-pdf-viewer/core';
+
+
 
 
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
+  //const [clicked, setIsClicked] = useState(false)
   
  
   return (
@@ -35,7 +38,7 @@ function App() {
       <Sidebardash  isSidebar={isSidebar} />
       <main className='content'>
         <Topbar  setIsSidebar={setIsSidebar}/>
-        <Worker workerUrl="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js">...</Worker>
+        {/* <Worker workerUrl="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js">...</Worker> */}
         
       <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -45,13 +48,8 @@ function App() {
               <Route path="/calender" element={<Calender />} />
               <Route path="/document" element={<Document />} />
               <Route path="/faq" element={<FAQ/>} />
-              <Route path="/fileview" element={<FileViewer />} />
-              {/* <Route path="/bar" element={<Bar />} />
-              <Route path="/pie" element={<Pie />} />
-              <Route path="/line" element={<Line />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/geography" element={<Geography />} /> */}
+              <Route path="/fileview" element={<FileViewer  />} />
+              
             </Routes>
 
       </main>
