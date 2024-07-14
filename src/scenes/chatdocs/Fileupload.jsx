@@ -1,9 +1,39 @@
-import axios from 'axios'
+const Fileupload = (event, folderId) => {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folderId', folderId);
+  
+    axios({
+      url: 'http://127.0.0.1:8000/upload',
+      method: 'POST',
+      headers: {
+        authorization: 'your token comes here', // Replace with your actual token
+      },
+      data: formData,
+    })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+  
 
-const Fileupload = (event)=>{
+
+
+
+
+
+
+/* import axios from 'axios'
+
+const Fileupload = (event,folderId)=>{
    const file = event.target.files[0];
    const formData = new FormData;
    formData.append('file', file);
+   formData.append('folderId', folderId);
 
    axios({
     // Endpoint to send files
@@ -43,7 +73,7 @@ const Fileupload = (event)=>{
    .then(response => response.json)
    .then(data => console.log(data))
    .catch(err => console.log(err))
-    alert("Yoh file uploaded!"); */
-}
+    alert("Yoh file uploaded!"); 
+} */
 
 export default Fileupload

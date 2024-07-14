@@ -1,4 +1,112 @@
-import { useState } from "react"
+
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
+import CreateFolder from './createFolder';
+import Fetchfolders from './fetchFolders';
+
+const Document = () => {
+  const [folderId, setFolderId] = useState('');
+  const [file, setFile] = useState(null);
+
+  const handleFolderChange = (e) => {
+    setFolderId(e.target.value);
+    
+  };
+
+  const handleFileChange = (e) => {
+    
+    setFile(e.target.files[0]);
+  };
+
+  const handleFileUpload = (event) => {
+    event.preventDefault();
+    if (!file || !folderId) {
+      alert('Please select a file and a folder');
+      return;
+    }
+
+    console.log(folderId);
+
+    const formData = new FormData();
+    formData.append('folderId', folderId.toLocaleLowerCase());
+    formData.append('file', file);
+    
+
+    axios({
+      url: 'http://127.0.0.1:8000/upload',
+      method: 'POST',
+      headers: {
+        authorization: 'your token comes here', // Replace with your actual token
+      },
+      data: formData,
+    })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  return (
+    <div>
+      <CreateFolder />
+      <div>
+      <form onSubmit={handleFileUpload}>
+        <div>
+          <label htmlFor="folder">Select Folder:</label>
+          <input
+            type="text"
+            id="folder"
+            value={folderId}
+            onChange={handleFolderChange}
+            placeholder="Enter Folder ID"
+            className='bg-black'
+          />
+        </div>
+        <div>
+          <label htmlFor="file">Select File:</label>
+          <input type="file" id="file" onChange={handleFileChange} />
+        </div>
+        <button type="submit">Upload File</button>
+      </form>
+        
+      </div>
+
+      <div>
+        <h2>These are folders present</h2>
+        <Fetchfolders />
+      </div>
+
+
+
+    </div>
+  );
+};
+
+export default Document;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* import { useState } from "react"
 import {folders} from "./data"
 import FolderIcon from '@mui/icons-material/Folder';
 import FetchfolderDetails from "./folderDetails";
@@ -67,9 +175,8 @@ const Document = ()=>{
 
 /*     ====View Folder Contents======= */
 
-const handleViewFolder = (folderName)=>{
+/* const handleViewFolder = (folderName)=>{
     setViewFolder(true);
-    console.log("No content here!");
     setFolderName(folderName);
 }
 
@@ -127,5 +234,5 @@ const handleViewFolder = (folderName)=>{
         
     </div>)
 }
-
-export default Document
+ */
+///export default Document
