@@ -2,27 +2,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const { GridFsStorage } = require('multer-gridfs-storage');
-const Grid = require('gridfs-stream');
 const methodOverride = require('method-override');
 const bodyParser = require('body-parser');
 const path = require('path');
-const cors = require('cors')
+const cors = require('cors');
+//const formidable = require('formidable');
 const { MongoClient, ObjectId, GridFSBucket } = require('mongodb');
+const folderRoutes = require('./folderCreate');
 
 const app = express();
 
 // Middleware
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
-app.set('view engine', 'ejs');
+app.use(cors());
 
-// Static folder
-app.use(express.static('public'));
-app.use(cors())
-
-
+app.use('/', folderRoutes);
 // Mongo URI
-const mongoURI = 'mongodb://localhost:27017/firstFiles';
+const mongoURI = 'mongodb://localhost:27017/Medicine_and_Surgery';
 
 // Create mongo connection
 const client = new MongoClient(mongoURI, {
@@ -35,13 +33,33 @@ let db;
 
 // Connect to MongoDB
 client.connect().then(() => {
-  db = client.db('firstFiles'); // Replace with your database name
+  db = client.db('Medicine_and_Surgery'); // Replace with your database name
   gfs = new GridFSBucket(db, { bucketName: 'uploads' });
   console.log('MongoDB connected and GridFS initialized');
-
 }).catch(err => {
   console.error('MongoDB connection error:', err);
 });
+
+ /* const folderSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+});  */
+
+
+
+const fileSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  path: { type: String, required: true },
+  folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const File = mongoose.model('File', fileSchema);
+
+
+
+
 
 // Create storage engine
 const storage = new GridFsStorage({
@@ -49,16 +67,13 @@ const storage = new GridFsStorage({
   file: (req, file) => {
     return new Promise((resolve, reject) => {
       const filename = path.basename(file.originalname);
-      const bucketName = file.mimetype.startsWith('image/') ? 'images' : 'uploads';
-      const metadata = {
-        folder: file.originalname.includes('parasitology') ? 'parasitology' : 'others'
-      };
-      console.log('Storing in:', bucketName);
+      const folderId = req.body.folderId || null;
+       console.log(folderId);
+       // Get folderId from request body
       const fileInfo = {
         filename: filename,
-       bucketName: bucketName,
-       metadata: metadata,
-        /* bucketName: 'uploads', */
+        bucketName: 'uploads',
+        metadata: { folderId: folderId } // Include folderId in metadata
       };
       resolve(fileInfo);
     });
@@ -67,64 +82,43 @@ const storage = new GridFsStorage({
 
 const upload = multer({ storage });
 
-// @route POST /upload
-// @desc Uploads file to DB
-app.post('/upload', upload.single('file'), (req, res) => {
-  res.json({ file: req.file });
-});
+// Route to upload a file
 
-// @route GET /files
-// @desc Display all files in JSON
-app.get('/files', async (req, res) => {
-  try {
-    const files = await db.collection('uploads.files').find({}).toArray();
-    if (!files || files.length === 0) {
-      return res.status(404).json({
-        err: 'No files exist',
-      });
+
+
+
+app.post('/upload', (req, res) => {
+  upload.single('file')(req, res, function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
     }
-    res.json(files);
+    //console.log('File uploaded:', req.file);
     
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ err: 'Internal server error' });
-  }
+  });
 });
 
-
- /* app.get('/files/:filename', async (req, res) => {
+//Get folders
+app.get("/folders", async(req,res)=>{
   try {
-    console.log(req.params.filename)
-    const fileName = req.params.filename
-     console.log(fileName);
-    //const files = await gfs.find({ filename: req.params.filename }).toArray();
-    const files = await db.collection('uploads.files').find({filename:req.params.filename }).toArray();
-    //filename: req.params.filename
-     if (!files || files.length === 0) {
-      return res.status(404).json({ err: 'No file exists' });
-    } 
-
-    // Log the file details to the console
-    console.log('File details:', files[0]);
-
-    const readstream = gfs.openDownloadStreamByName(req.params.filename);
-    readstream.pipe(res);
-  } catch (err) {
-    console.error(err);
+    const folders = await db.collection('folders').find({}).toArray();
+    if (!folders || folders.length === 0) {
+      return res.status(404).json({ err: 'No files found in this folder' });
+    }
+    res.json(folders);
+    
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ err: 'Internal server error' });
+    
   }
-}); 
- */
+})
 
-// Files from a particular folder
-
-
- app.get('/files/:folder', async (req, res) => {
-  const folderName = req.params.folder;
-
+// Route to get files in a specific folder
+app.get('/files/folder/:folderId', async (req, res) => {
+  const { folderId } = req.params;
   try {
     const files = await db.collection('uploads.files').find({
-      'metadata.folder': folderName
+      'metadata.folderId': folderId
     }).toArray();
 
     if (!files || files.length === 0) {
@@ -136,103 +130,29 @@ app.get('/files', async (req, res) => {
     console.error(err);
     res.status(500).json({ err: 'Internal server error' });
   }
-}); 
-
-// =====Get specific file from the folder
-
-
-app.get('/files/:folder/:filename', async (req, res) => {
-  //const fileName = req.params.filename;
-  //res.json("Hello there")
-  //console.log(fileName);
-
-  try {
-    const folderName = req.params.folder
-    const fileName = req.params.filename
-    /* const files = await db.collection('uploads.files').find({filename:req.params.filename }).toArray();
-    //filename: req.params.filename
-     if (!files || files.length === 0) {
-      return res.status(404).json({ err: 'No file exists' });
-    } 
-
-    // Log the file details to the console
-    console.log('File details:', files[0]);
-
-    const readstream = gfs.openDownloadStreamByName(req.params.filename);
-    readstream.pipe(res); */
-
-    const files = await db.collection('uploads.files').find({
-      'metadata.folder': folderName,
-      'filename': fileName
-    }).toArray();
-    res.json(files);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ err: 'Internal server error' });
-  }
-  
-}); 
-
-
-
-
-
-
-// @route GET /image/:filename
-// @desc Display image
-
-// testing
-
-app.get('/images', async (req, res) => {
-  try {
-    const files = await db.collection('images.files').find({}).toArray();
-    if (!files || files.length === 0) {
-      return res.status(404).json({
-        err: 'No files exist',
-      });
-    }
-    res.json(files);
-    
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ err: 'Internal server error' });
-  }
 });
 
 
 
+// Route to get a specific file from a folder
+app.get('/files/folder/:folderId/:filename', async (req, res) => {
+  const { folderId, filename } = req.params;
+  try {
+    const files = await db.collection('uploads.files').find({
+      'metadata.folderId': folderId,
+      'filename': filename
+    }).toArray();
 
-/* app.get('/image/:filename', (req, res) => {
-  db.collection('images.files').findOne({ filename: req.params.filename }, (err, file) => {
-    if (!file || file.length === 0) {
-      return res.status(404).json({
-        err: 'No file exists',
-      });
+    if (!files || files.length === 0) {
+      return res.status(404).json({ err: 'No file exists' });
     }
 
-    // Check if image
-    if (file.contentType === 'image/jpeg' || file.contentType === 'image/png') {
-      // Read output to browser
-      const readstream = gfs.openDownloadStreamByName(file.filename);
-      readstream.pipe(res);
-    } else {
-      res.status(404).json({
-        err: 'Not an image',
-      });
-    }
-  });
-}); */
-
-// @route DELETE /files/:id
-// @desc Delete file
-app.delete('/files/:id', (req, res) => {
-  const fileId = new ObjectId(req.params.id);
-  gfs.delete(fileId, (err) => {
-    if (err) {
-      return res.status(404).json({ err: err.message });
-    }
-    res.redirect('/');
-  });
+    const readstream = gfs.openDownloadStreamByName(filename);
+    readstream.pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: 'Internal server error' });
+  }
 });
 
 // Serve the frontend
@@ -242,38 +162,3 @@ app.get('/', (req, res) => {
 
 const port = 8000;
 app.listen(port, () => console.log(`Server started on port ${port}`));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* const express = require('express')
-//const cors = require('cors')
-//app.use(cors())
-const app = express()
-
-app.use(express.json())
-app.post('/upload', upload.array('files'), (req,res)=>{
-    console.log(req.body)
-    console.log(res.file)
-})
-
-app.listen(5000, ()=>{
-    console.log("server is running!");
-}) */
