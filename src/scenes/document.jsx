@@ -5,10 +5,27 @@ import axios from 'axios';
 
 import CreateFolder from './createFolder';
 import Fetchfolders from './fetchFolders';
+import { useEffect } from 'react';
 
 const Document = () => {
   const [folderId, setFolderId] = useState('');
   const [file, setFile] = useState(null);
+  const [folders, setFolders] = useState(false);
+
+  useEffect(()=>{
+    const Fetchfolders = async()=>{
+      const response = await axios.get("http://127.0.0.1:8000/folders");
+      console.log(response.data);
+      response.data.map((folder)=>{
+        console.log(folder.name);
+      })
+      setFolders(response.data);
+    }
+
+    Fetchfolders();
+    console.log(folders);
+
+  },[])
 
   const handleFolderChange = (e) => {
     setFolderId(e.target.value);
@@ -52,19 +69,33 @@ const Document = () => {
 
   return (
     <div>
+      <h2>Create a folder then upload or select an existing folder and upload</h2>
       <CreateFolder />
       <div>
       <form onSubmit={handleFileUpload}>
         <div>
           <label htmlFor="folder">Select Folder:</label>
-          <input
-            type="text"
-            id="folder"
-            value={folderId}
-            onChange={handleFolderChange}
-            placeholder="Enter Folder ID"
-            className='bg-black'
-          />
+
+          <div>
+          <select onChange={handleFolderChange} className='bg-stone-500'>
+          <option value="">Select a folder</option>
+  {folders && folders.length > 0 ? (
+    folders.map((folder) => (
+      <option key={folder._id} value={folder.name} className='bg-stone-700'>
+        {folder.name}
+      </option>
+    ))
+  ) : (
+    <option>No folders available</option>
+  )}
+</select>
+
+
+          </div>
+
+
+          
+
         </div>
         <div>
           <label htmlFor="file">Select File:</label>

@@ -1,8 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
-
+import Fetchfolders from "./fetchFolders";
+import { useEffect } from "react";
 function CreateFolder() {
     const [folderName, setFolderName] = useState('');
+
+    
   
     const handleCreateFolder = () => {
 
@@ -14,12 +17,16 @@ function CreateFolder() {
         body: JSON.stringify({ name: folderName.toLocaleLowerCase(), userId: 'user123' }) // Replace with actual userId
       })
       .then(response => response.json())
-      .then(data => console.log(data)); 
+      .then(data => console.log(data));
+      setFetchFolders(true);
+      
     };
+
+    
   
     return (
       <div>
-        <input type="text" value={folderName} onChange={(e) => setFolderName(e.target.value)} />
+        <input type="text" value={folderName} onChange={(e) => setFolderName(e.target.value)} className="bg-stone-700"/>
         <button onClick={handleCreateFolder}>Create Folder</button>
       </div>
     );
